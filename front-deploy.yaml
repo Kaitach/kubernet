@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: front
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: front
+  template:
+    metadata:
+      labels:
+        app: front
+    spec:
+      containers:
+      - name: front
+        image: kaitach/angular:0.24
+        ports:
+        - containerPort: 4200
+        env:
+        - name: BACKEND_API_URI
+          valueFrom:
+            configMapKeyRef:
+              name: service-urls
+              key:  BACKEND_API_URI
+        - name: PERSISTENCE_API_URI
+          valueFrom:
+            configMapKeyRef:
+              name: service-urls
+              key: PERSISTENCE_API_URI
+        - name: SOCKETIO_API_URI
+          valueFrom:
+            configMapKeyRef:
+              name: service-urls
+              key: SOCKETIO_API_URI
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: front-loadbalancer
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 4200
+      targetPort: 4200
+  selector:
+    app: front

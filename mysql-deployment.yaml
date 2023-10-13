@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql-statefulset
+spec:
+  serviceName: mysql-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:latest
+        env:
+        - name: MYSQL_DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: service-urls
+              key: MYSQL_DB_HOST
+        - name: MYSQL_DB_USER
+          valueFrom:
+            configMapKeyRef:
+              name: service-urls
+              key: MYSQL_DB_USER
+        - name: MYSQL_DB_PASSWORD
+          valueFrom:
+            configMapKeyRef:
+              name: service-urls
+              key: MYSQL_DB_PASSWORD
+        - name: MYSQL_DB_DATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: service-urls
+              key: MYSQL_DB_DATABASE
+        volumeMounts:
+        - name: mysql-data
+          mountPath: /var/lib/mysql
+  volumeClaimTemplates:
+  - metadata:
+      name: mysql-pv-claim
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi

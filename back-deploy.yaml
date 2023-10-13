@@ -1,0 +1,219 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: back-inventario
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: back-inventario
+  template:
+    metadata:
+      labels:
+        app: back-inventario
+    spec:
+      containers:
+        - name: back-inventario
+          image: kaitach/backinventario:v1.2
+          ports:
+            - containerPort: 3000
+          env:
+            - name: MONGO_DB_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: service-urls
+                  key: MONGO_DB_URI
+            - name: RABBITURL
+              valueFrom:
+                configMapKeyRef:
+                  name: service-urls
+                  key: RABBIT_URI
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jwtauth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jwtauth
+  template:
+    metadata:
+      labels:
+        app: jwtauth
+    spec:
+      containers:
+        - name: jwtauth
+          image: kaitach/jwtauth:v1.2
+          ports:
+            - containerPort: 3004
+          env:
+            - name: MONGO_DB_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: service-urls
+                  key: MONGO_DB_URI
+            - name: RABBITURL
+              valueFrom:
+                configMapKeyRef:
+                  name: service-urls
+                  key: RABBIT_URI
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: soketio
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: soketio
+  template:
+    metadata:
+      labels:
+        app: soketio
+    spec:
+      containers:
+        - name: soketio
+          image: kaitach/soketio:v1.2
+          ports:
+            - containerPort: 3001
+              protocol: TCP
+            - containerPort: 81
+              protocol: TCP
+          env:
+            - name: RABBITURL
+              valueFrom:
+                configMapKeyRef:
+                  name: service-urls
+                  key: RABBIT_URI
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: persistence-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: persistence-app
+  template:
+    metadata:
+      labels:
+        app: persistence-app
+    spec:
+      containers:
+        - name: persistence-app
+          image: kaitach/persistence:v1.2
+          ports:
+            - containerPort: 3002
+          env:
+            - name: RABBITURL
+              valueFrom:
+                configMapKeyRef:
+                  name: service-urls
+                  key: RABBIT_URI
+            - name: MYSQL_DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: service-urls
+                  key: MYSQL_DB_HOST
+            - name: MYSQL_DB_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: service-urls
+                  key: MYSQL_DB_USER
+            - name: MYSQL_DB_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: service-urls
+                  key: MYSQL_DB_PASSWORD
+            - name: MYSQL_DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: service-urls
+                  key: MYSQL_DB_PORT
+            - name: MYSQL_DB_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  name: service-urls
+                  key: MYSQL_DB_DATABASE
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: back-inventario-service
+spec:
+  selector:
+    app: back-inventario
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+  type: NodePort
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: back-inventario-service
+spec:
+  selector:
+    app: back-inventario
+  ports:
+    - name: tcp-3000
+      protocol: TCP
+      port: 3000
+      targetPort: 3000
+  type: NodePort
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: persistence-service
+spec:
+  selector:
+    app: persistence-app
+  ports:
+    - name: tcp-3002
+      protocol: TCP
+      port: 3002
+      targetPort: 3002
+  type: NodePort
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: soketio-service
+spec:
+  selector:
+    app: soketio
+  ports:
+    - name: tcp-81
+      protocol: TCP
+      port: 81
+      targetPort: 81
+  type: NodePort
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jwtauth-service
+spec:
+  selector:
+    app: jwtauth
+  ports:
+    - name: tcp-3004
+      protocol: TCP
+      port: 3004
+      targetPort: 3004
+  type: NodePort
