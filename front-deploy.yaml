@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: front
-        image: kaitach/angular:0.24
+        image: kaitach/angular:1.0
         ports:
         - containerPort: 4200
         env:
