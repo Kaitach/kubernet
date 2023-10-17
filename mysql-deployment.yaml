@@ -1,9 +1,8 @@
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
-  name: mysql-statefulset
+  name: mysql-deployment
 spec:
-  serviceName: mysql-service
   replicas: 1
   selector:
     matchLabels:
@@ -27,25 +26,13 @@ spec:
             configMapKeyRef:
               name: service-urls
               key: MYSQL_DB_USER
-        - name: MYSQL_DB_PASSWORD
+        - name: MYSQL_ROOT_PASSWORD
           valueFrom:
             configMapKeyRef:
               name: service-urls
               key: MYSQL_DB_PASSWORD
-        - name: MYSQL_DB_DATABASE
+        - name: MYSQL_DATABASE
           valueFrom:
             configMapKeyRef:
               name: service-urls
               key: MYSQL_DB_DATABASE
-        volumeMounts:
-        - name: mysql-data
-          mountPath: /var/lib/mysql
-  volumeClaimTemplates:
-  - metadata:
-      name: mysql-pv-claim
-    spec:
-      accessModes:
-        - ReadWriteOnce
-      resources:
-        requests:
-          storage: 1Gi
